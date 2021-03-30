@@ -4,17 +4,28 @@
  * pin_thickness is measured along the same axis as the board thickness.
  * tail_width is the width of the tails where they meet the bottom of the pins, where they're narrowest.
  */
-module dovetail_pins(pin_length=.75, pin_width=1, pin_thickness=.75, pin_count=4, angle=15, tail_width=1) {
+module dovetail_pins(pin_length=.75, pin_width=1, pin_thickness=.75, pin_count=4, angle=15, tail_width=1, flat_pins=0) {
     intersection() {
         translate([0.005, 0.005, 0.005]) cube([(pin_count-1)*(pin_width+tail_width)-0.01, pin_length-0.01, pin_thickness-0.01]);
-        dovetail_pins_idealized(
-            pin_length=pin_length,
-            pin_width=pin_width,
-            pin_thickness=pin_thickness,
-            pin_count=pin_count,
-            angle=angle,
-            tail_width=tail_width
-        );
+        if (flat_pins == 1) {
+            rotate([90, 0, 0]) translate([0, 0, -pin_thickness]) dovetail_pins_idealized(
+                pin_length=pin_length,
+                pin_width=pin_width,
+                pin_thickness=pin_thickness,
+                pin_count=pin_count,
+                angle=angle,
+                tail_width=tail_width
+            );
+        } else {
+            dovetail_pins_idealized(
+                pin_length=pin_length,
+                pin_width=pin_width,
+                pin_thickness=pin_thickness,
+                pin_count=pin_count,
+                angle=angle,
+                tail_width=tail_width
+            );
+        }
     }
 }
 
@@ -109,12 +120,16 @@ module board_with_dovetail_tails(board_length, board_width, board_thickness, tai
 /**
  * Construct a board with pins cut into it. board_length includes the length of the pins.
  */
-module board_with_dovetail_pins(board_length, board_width, board_thickness, pin_length, tail_width, pin_width, pin_count, angle) {
+module board_with_dovetail_pins(board_length, board_width, board_thickness, pin_length, tail_width, pin_width, pin_count, angle, flat_pins=0) {
     translate([0, board_length - ( 2 * pin_length) + pin_length, 0]) {
-        dovetail_pins(pin_length=pin_length, pin_width=pin_width, pin_thickness=board_thickness, pin_count=pin_count, angle=angle, tail_width=tail_width);
+        dovetail_pins(pin_length=pin_length, pin_width=pin_width, pin_thickness=board_thickness, pin_count=pin_count, angle=angle, tail_width=tail_width, flat_pins=flat_pins);
     }
     translate([0, pin_length, 0]) cube([board_width, board_length - ( 2 * pin_length), board_thickness]);
-        dovetail_pins(pin_length=pin_length, pin_width=pin_width, pin_thickness=board_thickness, pin_count=pin_count, angle=angle, tail_width=tail_width);
+    if (flat_pins == 1) {
+        rotate([180,0,0]) translate([0,-board_thickness,-board_thickness]) dovetail_pins(pin_length=pin_length, pin_width=pin_width, pin_thickness=board_thickness, pin_count=pin_count, angle=angle, tail_width=tail_width, flat_pins=flat_pins);
+    } else {
+        dovetail_pins(pin_length=pin_length, pin_width=pin_width, pin_thickness=board_thickness, pin_count=pin_count, angle=angle, tail_width=tail_width, flat_pins=flat_pins);
+    }
 }
 
 // An example set of boards.
